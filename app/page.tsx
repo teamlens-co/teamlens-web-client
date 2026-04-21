@@ -67,7 +67,9 @@ const cardVariantsCenter = {
   visible: { y: 0, opacity: 1, transition: { duration: 0.9, ease: motionEase } }
 };
 
-const agentDownloadHref = "/download/agent";
+const agentDownloadHref =
+  process.env.NEXT_PUBLIC_AGENT_DOWNLOAD_URL?.trim() ||
+  "/downloads/TeamLens_0.1.0_x64-setup.exe";
 
 export default function Home() {
   const router = useRouter();
