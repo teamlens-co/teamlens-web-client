@@ -12,6 +12,101 @@ type Screenshot = {
   createdAt: string;
 };
 
+function ScreenshotCard({ screenshot }: { screenshot: Screenshot }) {
+  const { authHeaders, apiBase } = useAuth();
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const [imageError, setImageError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authHeaders) {
+      setImageError("Missing auth token.");
+      setIsLoadingImage(false);
+      return;
+    }
+
+    let objectUrl: string | null = null;
+    let isMounted = true;
+
+    const loadImage = async () => {
+      setIsLoadingImage(true);
+      setImageError(null);
+
+      try {
+        const response = await fetch(`${apiBase}/api/agent/screenshots/${screenshot.id}`, {
+          headers: authHeaders,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load screenshot (${response.status})`);
+        }
+
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+
+        if (isMounted) {
+          setImageUrl(objectUrl);
+        }
+      } catch (error) {
+        console.error("Failed to load screenshot image", error);
+        if (isMounted) {
+          setImageError("Unable to load screenshot image.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingImage(false);
+        }
+      }
+    };
+
+    void loadImage();
+
+    return () => {
+      isMounted = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [authHeaders, apiBase, screenshot.id]);
+
+  return (
+    <a
+      href={`${apiBase}/api/agent/screenshots/${screenshot.id}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative block overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100 hover:shadow-lg transition-all duration-300"
+    >
+      <div className="aspect-[16/10] w-full overflow-hidden bg-slate-900 flex items-center justify-center">
+        {isLoadingImage ? (
+          <p className="text-sm text-slate-300">Loading...</p>
+        ) : imageError ? (
+          <p className="px-4 text-center text-sm text-red-200">{imageError}</p>
+        ) : imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt="Screenshot"
+            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <p className="text-sm text-slate-300">No preview available</p>
+        )}
+      </div>
+      <div className="bg-white p-4">
+        <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+          {new Date(screenshot.capturedAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })}
+        </p>
+        <p className="text-xs text-slate-500 mt-1">{new Date(screenshot.capturedAt).toLocaleDateString()}</p>
+      </div>
+    </a>
+  );
+}
+
 export default function ScreenshotsView() {
   const { authHeaders, apiBase, selectedUserId, dateRange } = useAuth();
   const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
@@ -84,35 +179,7 @@ export default function ScreenshotsView() {
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {screenshots.map((screenshot) => (
-                <a
-                  key={screenshot.id}
-                  href={`${apiBase}/api/agent/screenshots/${screenshot.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100 hover:shadow-lg transition-all duration-300"
-                >
-                  <div className="aspect-[16/10] w-full overflow-hidden bg-slate-900">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`${apiBase}/api/agent/screenshots/${screenshot.id}`}
-                      alt="Screenshot"
-                      className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="bg-white p-4">
-                    <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                      {new Date(screenshot.capturedAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {new Date(screenshot.capturedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </a>
+                <ScreenshotCard key={screenshot.id} screenshot={screenshot} />
               ))}
             </div>
           )}
