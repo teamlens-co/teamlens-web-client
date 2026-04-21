@@ -83,7 +83,7 @@ export default function ManagerSignInPage() {
     setStatusMessage("");
 
     try {
-      const response = await fetch(`${apiBase}/api/web/auth/register`, {
+      const response = await fetch(`${apiBase}/api/web/auth/signup-manager`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
