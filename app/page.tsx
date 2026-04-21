@@ -67,6 +67,8 @@ const cardVariantsCenter = {
   visible: { y: 0, opacity: 1, transition: { duration: 0.9, ease: motionEase } }
 };
 
+const agentDownloadHref = "/download/agent";
+
 export default function Home() {
   const router = useRouter();
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
@@ -261,8 +263,7 @@ export default function Home() {
               Manager sign in
             </Link>
             <a
-              href="data:application/octet-stream;charset=utf-8,This%20is%20a%20mock%20Agent%20installer%20executable."
-              download="TeamLens-Agent-Setup.exe"
+              href={agentDownloadHref}
               className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/80 px-7 py-3.5 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(0,0,0,0.05)] transition hover:-translate-y-0.5 hover:bg-white"
             >
               <Download size={16} />
@@ -390,8 +391,7 @@ export default function Home() {
               {/* Install Agent Button */}
               <div className="absolute bottom-8 w-full flex justify-center z-20">
                 <a 
-                  href="data:application/octet-stream;charset=utf-8,This%20is%20a%20mock%20Agent%20installer%20executable."
-                  download="TeamLens-Agent-Setup.exe" 
+                  href={agentDownloadHref}
                   className="bg-[#1e293b] text-white px-[24px] py-[12px] rounded-[1.3rem] flex items-center gap-[12px] hover:bg-[#0f172a] transition shadow-[0_10px_20px_rgba(30,41,59,0.15)]"
                 >
                   <Download size={20} className="text-white/90" strokeWidth={2.5} />
@@ -648,8 +648,7 @@ export default function Home() {
               
               <div className="mt-12 mb-16 flex flex-col sm:flex-row items-center justify-center gap-4">
                   <a
-                    href="data:application/octet-stream;charset=utf-8,This%20is%20a%20mock%20Agent%20installer%20executable."
-                    download="TeamLens-Agent-Setup.exe"
+                    href={agentDownloadHref}
                     className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-[14px] font-semibold text-slate-900 transition hover:bg-slate-100 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_50px_rgba(255,255,255,0.25)]"
                   >
                     <Download size={18} className="text-slate-700" />
@@ -702,8 +701,7 @@ export default function Home() {
               Manager sign in
             </Link>
             <a
-              href="data:application/octet-stream;charset=utf-8,This%20is%20a%20mock%20Agent%20installer%20executable."
-              download="TeamLens-Agent-Setup.exe"
+              href={agentDownloadHref}
               className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/80 px-7 py-3.5 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(0,0,0,0.05)] transition hover:-translate-y-0.5 hover:bg-white"
             >
               <Download size={16} />
