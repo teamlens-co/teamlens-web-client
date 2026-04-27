@@ -103,7 +103,10 @@ export default function CalendarView() {
     setHeatmapLoading(true);
     try {
       const p = new URLSearchParams({ userId: selectedUserId, year: String(viewYear), month: String(viewMonth) });
-      const res = await fetch(`${apiBase}/api/web/dashboard/calendar?${p}`, { headers: authHeaders });
+      const res = await fetch(`${apiBase}/api/web/dashboard/calendar?${p}`, {
+        headers: authHeaders,
+        credentials: "include",
+      });
       const json = await res.json();
       const map = new Map<string, DayData>();
       if (json.success) for (const d of json.data as DayData[]) map.set(d.date, d);
@@ -129,11 +132,11 @@ export default function CalendarView() {
       const [analyticsRes, screenshotsRes] = await Promise.all([
         fetch(
           `${apiBase}/api/web/dashboard/analytics?${new URLSearchParams({ userId: selectedUserId, startDate: dayStart, endDate: dayEnd })}`,
-          { headers: authHeaders }
+          { headers: authHeaders, credentials: "include" }
         ),
         fetch(
           `${apiBase}/api/agent/screenshots?${new URLSearchParams({ userId: selectedUserId, startDate: dayStart, endDate: dayEnd, limit: "50" })}`,
-          { headers: authHeaders }
+          { headers: authHeaders, credentials: "include" }
         ),
       ]);
 

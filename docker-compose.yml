@@ -4,11 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
     container_name: teamlens-frontend
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000}
-      AGENT_DOWNLOAD_URL: ${AGENT_DOWNLOAD_URL:-https://github.com/your-org/your-agent-repo/releases/latest/download/TeamLens-Agent-Setup.msi}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+      AGENT_DOWNLOAD_URL: ${AGENT_DOWNLOAD_URL:-}
       NODE_ENV: ${NODE_ENV:-production}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"

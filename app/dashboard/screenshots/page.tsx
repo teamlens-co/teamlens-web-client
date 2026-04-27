@@ -35,6 +35,7 @@ function ScreenshotCard({ screenshot }: { screenshot: Screenshot }) {
       try {
         const response = await fetch(`${apiBase}/api/agent/screenshots/${screenshot.id}`, {
           headers: authHeaders,
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -128,6 +129,7 @@ export default function ScreenshotsView() {
         });
         const response = await fetch(`${apiBase}/api/agent/screenshots?` + queryParams.toString(), {
           headers: authHeaders,
+          credentials: "include",
         });
         const result = await response.json();
         if (result.success) {

@@ -25,9 +25,8 @@ export type Organization = {
 type AuthContextType = {
   user: UserProfile | null;
   organization: Organization | null;
-  authToken: string | null;
   apiBase: string;
-  authHeaders: { Authorization: string; "Content-Type": string } | null;
+  authHeaders: { "Content-Type": string } | null;
   selectedUserId: string;
   setSelectedUserId: (id: string) => void;
   dateRange: DateRange;
@@ -37,45 +36,95 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const DATE_RANGE_STORAGE_KEY = "teamlens_date_range";
+
+const getInitialDateRange = (): DateRange => {
+  const fallback = getPresetRange("Today");
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  const raw = window.localStorage.getItem(DATE_RANGE_STORAGE_KEY);
+  if (!raw) {
+    return fallback;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as {
+      label?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+
+    if (!parsed.startDate || !parsed.endDate) {
+      return fallback;
+    }
+
+    const startDate = new Date(parsed.startDate);
+    const endDate = new Date(parsed.endDate);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      return fallback;
+    }
+
+    return {
+      label: parsed.label?.trim() || fallback.label,
+      startDate,
+      endDate,
+    };
+  } catch {
+    return fallback;
+  }
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return window.localStorage.getItem("teamlens_manager_token");
-    }
-    return null;
-  });
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [dateRange, setDateRange] = useState<DateRange>(getPresetRange("Last 7 Days"));
+  const [dateRange, setDateRangeState] = useState<DateRange>(() => getPresetRange("Today"));
   const [isLoading, setIsLoading] = useState(true);
+
+  // Load date range from localStorage after mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const raw = window.localStorage.getItem(DATE_RANGE_STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.startDate && parsed.endDate) {
+            const startDate = new Date(parsed.startDate);
+            const endDate = new Date(parsed.endDate);
+            if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
+              setDateRangeState({
+                label: parsed.label?.trim() || getPresetRange("Today").label,
+                startDate,
+                endDate,
+              });
+            }
+          }
+        } catch (err) {
+          // Ignore parse errors
+        }
+      }
+    }
+  }, []);
 
   const apiBase = useMemo(() => {
     const envBase = process.env.NEXT_PUBLIC_API_URL?.trim();
-    return envBase && envBase.length > 0 ? envBase.replace(/\/$/, "") : "http://localhost:5000";
+    return envBase && envBase.length > 0 ? envBase.replace(/\/$/, "") : "";
   }, []);
 
   const authHeaders = useMemo(() => {
-    if (!authToken) return null;
-    return {
-      Authorization: `Bearer ${authToken}`,
-      "Content-Type": "application/json",
-    };
-  }, [authToken]);
+    if (!user) return null;
+    return { "Content-Type": "application/json" };
+  }, [user]);
 
   useEffect(() => {
     const restoreSession = async () => {
-      if (!authHeaders) {
-        setIsLoading(false);
-        return;
-      }
-
       try {
         const response = await fetch(`${apiBase}/api/web/auth/me`, {
           method: "GET",
-          headers: authHeaders,
+          credentials: "include",
           cache: "no-store",
         });
 
@@ -95,13 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSelectedUserId(payload.data.id);
           }
         } else {
-          // Bad token
           setUser(null);
           setOrganization(null);
-          setAuthToken(null);
-          if (typeof window !== "undefined") {
-            window.localStorage.removeItem("teamlens_manager_token");
-          }
         }
       } catch (error) {
         console.error("Session restore error", error);
@@ -111,16 +155,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     void restoreSession();
-  }, [apiBase, authHeaders, selectedUserId]);
+  }, [apiBase, selectedUserId]);
+
+  const setDateRange = (range: DateRange) => {
+    setDateRangeState(range);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        DATE_RANGE_STORAGE_KEY,
+        JSON.stringify({
+          label: range.label,
+          startDate: range.startDate.toISOString(),
+          endDate: range.endDate.toISOString(),
+        }),
+      );
+    }
+  };
 
   const logout = () => {
+    void fetch(`${apiBase}/api/web/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).catch((error) => {
+      console.error("Logout request failed", error);
+    });
     setUser(null);
     setOrganization(null);
-    setAuthToken(null);
     setSelectedUserId("");
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("teamlens_manager_token");
-    }
     router.push("/manager/sign-in");
   };
 
@@ -129,7 +189,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         organization,
-        authToken,
         apiBase,
         authHeaders,
         selectedUserId,

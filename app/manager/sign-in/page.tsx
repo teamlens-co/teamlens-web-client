@@ -22,33 +22,26 @@ export default function ManagerSignInPage() {
 
   const apiBase = useMemo(() => {
     const envBase = process.env.NEXT_PUBLIC_API_URL?.trim();
-    return envBase && envBase.length > 0 ? envBase.replace(/\/$/, "") : "http://localhost:5000";
+    return envBase && envBase.length > 0 ? envBase.replace(/\/$/, "") : "";
   }, []);
 
   // Check if already authenticated on mount
   useEffect(() => {
-    const storedToken = window.localStorage.getItem("teamlens_manager_token");
-    if (storedToken) {
-      // Validate token before redirecting
-      fetch(`${apiBase}/api/web/auth/me`, {
-        headers: { Authorization: `Bearer ${storedToken}` },
+    fetch(`${apiBase}/api/web/auth/me`, {
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then((res) => {
+        if (res.ok) {
+          router.replace("/dashboard");
+          return;
+        }
+        setIsCheckingSession(false);
       })
-        .then((res) => {
-          if (res.ok) {
-            router.replace("/dashboard");
-          } else {
-            window.localStorage.removeItem("teamlens_manager_token");
-            setIsCheckingSession(false);
-          }
-        })
-        .catch(() => setIsCheckingSession(false));
-    } else {
-      setIsCheckingSession(false);
-    }
+      .catch(() => setIsCheckingSession(false));
   }, [apiBase, router]);
 
-  const onAuthSuccess = (accessToken: string) => {
-    window.localStorage.setItem("teamlens_manager_token", accessToken);
+  const onAuthSuccess = () => {
     setStatusMessage("Login successful! Redirecting...");
     router.push("/dashboard");
   };
@@ -61,13 +54,14 @@ export default function ManagerSignInPage() {
       const response = await fetch(`${apiBase}/api/web/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
 
       const payload = await response.json();
 
       if (response.ok && payload.success) {
-        onAuthSuccess(payload.data.accessToken);
+        onAuthSuccess();
       } else {
         setStatusMessage(`Error: ${payload.message ?? "Invalid credentials"}`);
         setLoadingAuth(false);
@@ -86,6 +80,7 @@ export default function ManagerSignInPage() {
       const response = await fetch(`${apiBase}/api/web/auth/signup-manager`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           fullName: signupName,
           email: signupEmail,
@@ -97,7 +92,7 @@ export default function ManagerSignInPage() {
       const payload = await response.json();
 
       if (response.ok && payload.success) {
-        onAuthSuccess(payload.data.accessToken);
+        onAuthSuccess();
       } else {
         let errorMsg = payload.message || "Registration failed";
         if (payload.issues?.fieldErrors) {

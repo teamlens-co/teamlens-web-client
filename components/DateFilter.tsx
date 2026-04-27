@@ -35,7 +35,8 @@ export const getPresetRange = (label: string): DateRange => {
   switch (label) {
     case "Today":
       start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
+      // Keep end as 'now' so active sessions count time up to this moment.
+      // Setting 23:59:59 makes backend think the range is in the future and breaks isCurrentRange.
       break;
     case "Yesterday":
       start.setDate(now.getDate() - 1); start.setHours(0, 0, 0, 0);

@@ -48,7 +48,7 @@ function AcceptInviteContent() {
 
   const apiBase = useMemo(() => {
     const envBase = process.env.NEXT_PUBLIC_API_URL?.trim();
-    return envBase && envBase.length > 0 ? envBase.replace(/\/$/, "") : "http://localhost:5000";
+    return envBase && envBase.length > 0 ? envBase.replace(/\/$/, "") : "";
   }, []);
 
   useEffect(() => {
@@ -125,26 +125,8 @@ function AcceptInviteContent() {
         return;
       }
 
-      const loginResponse = await fetch(`${apiBase}/api/web/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email: invite.email,
-          password,
-        }),
-      });
-
-      const loginPayload = (await loginResponse.json()) as ApiResponse<unknown>;
-      if (!loginResponse.ok || !loginPayload.success) {
-        setStatusMessage("Invite accepted. Please login from the main page.");
-        return;
-      }
-
       setStatusMessage("Invite accepted. Redirecting to dashboard...");
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     } catch {
       setStatusMessage("Unable to complete invite acceptance. Please try again.");

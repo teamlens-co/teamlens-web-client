@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Image as ImageIcon, Users, LogOut, ShieldCheck, User } from "lucide-react";
+import { LayoutDashboard, Image as ImageIcon, Users, LogOut, ShieldCheck, User, Settings } from "lucide-react";
 import { AuthProvider, useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState } from "react";
 import DateFilter from "../../components/DateFilter";
@@ -17,7 +17,7 @@ function SidebarLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user?.role === "MANAGER" && authHeaders) {
-      fetch(`${apiBase}/api/web/users`, { headers: authHeaders })
+      fetch(`${apiBase}/api/web/users`, { headers: authHeaders, credentials: "include" })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
@@ -48,6 +48,7 @@ function SidebarLayout({ children }: { children: React.ReactNode }) {
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "Screenshots", href: "/dashboard/screenshots", icon: ImageIcon },
     { name: "Team & Invites", href: "/dashboard/team", icon: Users },
+    ...(user.role === "MANAGER" ? [{ name: "Settings", href: "/dashboard/settings", icon: Settings }] : []),
   ];
 
   return (
@@ -111,7 +112,8 @@ function SidebarLayout({ children }: { children: React.ReactNode }) {
             {pathname === "/dashboard" ? "Overview" :
              pathname === "/dashboard/calendar" ? "Calendar" :
              pathname === "/dashboard/screenshots" ? "Screenshots" :
-             pathname === "/dashboard/team" ? "Team & Invites" : "Dashboard"}
+             pathname === "/dashboard/team" ? "Team & Invites" :
+             pathname === "/dashboard/settings" ? "Settings" : "Dashboard"}
           </h1>
           <div className="flex items-center space-x-3">
             {/* DATE FILTER GLOBALLY APPLIED */}

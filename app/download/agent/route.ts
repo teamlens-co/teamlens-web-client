@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 const DOWNLOAD_CONFIG_ERROR =
   "Agent download is not configured. Please contact support.";
+const LOCAL_AGENT_DOWNLOAD_PATH = "/downloads/TeamLens_0.1.0_x64-setup.exe";
 
 function resolveDownloadUrl(): string | null {
   const configuredUrl =
@@ -9,7 +10,7 @@ function resolveDownloadUrl(): string | null {
     process.env.NEXT_PUBLIC_AGENT_DOWNLOAD_URL?.trim();
 
   if (!configuredUrl) {
-    return null;
+    return LOCAL_AGENT_DOWNLOAD_PATH;
   }
 
   try {
